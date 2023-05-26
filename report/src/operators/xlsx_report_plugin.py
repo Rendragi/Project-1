@@ -35,7 +35,7 @@ class ExcelReportPlugin():
 
         # Mengubah format tanggal di sel Date
         date_format = 'DD-MM-YYYY'  
-        for cell in ws['A']:
+        for cell in ws['B']:
             cell.number_format = date_format
             if isinstance(cell.value, dt.datetime):
                 cell.value = cell.value.date()
@@ -51,8 +51,7 @@ class ExcelReportPlugin():
                 cell.border = thin_border
         
         self.column_dimension(ws)
-        self.barchart1(ws, min_column, max_column, min_row, max_row)
-        self.barchart2(ws, min_column, max_column, min_row, max_row)
+        self.barchart(ws, min_column, max_column, min_row, max_row)
         self.total_revenue_perproduct(max_column, max_row, min_row, ws)
         self.add_title(ws)
         self.save_file(wb)
@@ -65,8 +64,8 @@ class ExcelReportPlugin():
     #Transform Data
     def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         df_transform = df.assign(Gross_revenue=df['cogs'] + df['gross income']).pivot_table(
-                                    index='Date',
-                                    columns=['Gender', 'Product line'],
+                                    index=['Gender','Date'],
+                                    columns='Product line',
                                     values='Gross_revenue',
                                     aggfunc='sum').round()
         return df_transform
@@ -88,59 +87,31 @@ class ExcelReportPlugin():
 
         workbook.column_dimensions = dim_holder
 
-    #Membuat Barchart untuk Female
-    def barchart1(self, workbook, min_column, max_column, min_row, max_row):
+    #Membuat Barchart
+    def barchart(self, workbook, min_column, max_column, min_row, max_row):
         barchart = BarChart()
 
         data = Reference(workbook, 
-                        min_col=min_column+1,
-                        max_col=min_column+6,
-                        min_row=min_row+1,
+                        min_col=min_column+2,
+                        max_col=max_column,
+                        min_row=min_row,
                         max_row=max_row
                         )
 
         categories = Reference(workbook,
                                 min_col=min_column,
-                                max_col=min_column,
-                                min_row=min_row+3,
+                                max_col=min_column+1,
+                                min_row=min_row+1,
                                 max_row=max_row
                                 )
 
         barchart.add_data(data, titles_from_data=True)
         barchart.set_categories(categories)
 
-
-        workbook.add_chart(barchart, 'C12')
-        barchart.title = 'Daily Gross Revenue Female'
-        barchart.type = 'col'
-        barchart.grouping = 'stacked'
-        barchart.overlap = 100
-        barchart.style = 2
-
-    #Membuat Barchart untuk Male
-    def barchart2(self, workbook, min_column, max_column, min_row, max_row):
-        barchart = BarChart()
-
-        data = Reference(workbook, 
-                        min_col=min_column+7,
-                        max_col=min_column+12,
-                        min_row=min_row+1,
-                        max_row=max_row
-                        )
-
-        categories = Reference(workbook,
-                                min_col=min_column,
-                                max_col=min_column,
-                                min_row=min_row+3,
-                                max_row=max_row
-                                )
-
-        barchart.add_data(data, titles_from_data=True)
-        barchart.set_categories(categories)
-
-
-        workbook.add_chart(barchart, 'H12')
-        barchart.title = 'Daily Gross Revenue Male'
+        barchart.height = 10  
+        barchart.width = 50  
+        workbook.add_chart(barchart, 'I12')
+        barchart.title = 'Daily Gross Revenue'
         barchart.type = 'col'
         barchart.grouping = 'stacked'
         barchart.overlap = 100
@@ -152,7 +123,7 @@ class ExcelReportPlugin():
         alphabet_excel = alphabet[:max_column]
         #[A,B,C,D,E,F,G]
         for i in alphabet_excel:
-            if i != 'A':
+            if i != 'A'and i !='B':
                 wb[f'{i}{max_row+1}'] = f'=SUM({i}{min_row+1}:{i}{max_row})'
                 wb[f'{i}{max_row+1}'].style = 'Currency'
 
