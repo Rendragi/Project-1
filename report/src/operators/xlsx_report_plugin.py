@@ -63,11 +63,12 @@ class ExcelReportPlugin():
         return df
 
     #Transform Data
-    def transform(self, df:pd.DataFrame) -> pd.DataFrame:
-        df_transform = df.pivot_table(index='Date', 
-                                    columns=['Gender', 'Product line'],  
-                                    values='gross income', 
-                                    aggfunc='sum').round(2)
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        df_transform = df.assign(Gross_revenue=df['cogs'] + df['gross income']).pivot_table(
+                                    index='Date',
+                                    columns=['Gender', 'Product line'],
+                                    values='Gross_revenue',
+                                    aggfunc='sum').round()
         return df_transform
     
     #Membuat output File
@@ -156,12 +157,7 @@ class ExcelReportPlugin():
                 wb[f'{i}{max_row+1}'].style = 'Currency'
 
         wb[f'{alphabet_excel[0]}{max_row+1}'] = 'Total Revenue Product'
-<<<<<<< HEAD
-  
-=======
-        
     
->>>>>>> d76207fe55e9ee775804835396cdc28e88d91349
     def add_title(self, workbook):
         workbook['A1'] = 'Daily Gross Revenue Report'
         workbook['A2'] = '2019'
